@@ -11,6 +11,8 @@ import * as flags from "./flags";
 import * as setupGo from "./setup-go/main";
 import * as cache from "./cache";
 
+import commandExists from "command-exists";
+
 async function run(): Promise<void> {
   const runnerTmpdir = process.env["RUNNER_TEMP"] || os.tmpdir();
   const tmpdir = await fs.mkdtemp(path.join(runnerTmpdir, "reviewdog-"));
@@ -31,6 +33,7 @@ async function run(): Promise<void> {
     const workdir = core.getInput("workdir") || ".";
     const cwd = path.relative(process.env["GITHUB_WORKSPACE"] || process.cwd(), workdir);
     const enableCache = core.getBooleanInput("cache");
+    const useSystemGolangciLint = core.getBooleanInput("use_system_golangci_lint");
 
     await core.group("Installing Go ...", async () => {
       await setupGo.run(goVersion, goVersionFile);
@@ -46,7 +49,19 @@ async function run(): Promise<void> {
     const golangci = await core.group(
       "Installing golangci-lint ... https://github.com/golangci/golangci-lint",
       async () => {
-        return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+        if (!useSystemGolangciLint) {
+          core.info(`won't attempt to locate the system's golangci-lint; installing it`);
+          return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+        } else {
+          core.info(`attempting to locate the system's golangci-lint`);
+          if (await commandExists("golangci-lint")) {
+            core.info(`found golangci-lint in the path; skipping its installation`);
+            return "golangci-lint"
+          } else {
+            core.info(`couldn't find golangci-lint in the path; installing it`);
+            return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+          }
+        }
       },
     );
 

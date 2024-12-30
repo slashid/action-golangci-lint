@@ -69,6 +69,10 @@ inputs:
     description: "enable cache"
     default: true
     required: false
+  use_system_golangci_lint:
+    description: "use the system's golangci-lint binary, in found in the PATH"
+    default: false
+    required: false
 
 runs:
   using: "node20"
