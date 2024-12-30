@@ -51,7 +51,8 @@ async function run(): Promise<void> {
       async () => {
         if (!useSystemGolangciLint) {
           core.info(`won't attempt to locate the system's golangci-lint; installing it`);
-          return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+          //return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+          return "golangci-lint"
         } else {
           core.info(`attempting to locate the system's golangci-lint`);
           if (await commandExists("golangci-lint")) {
@@ -59,9 +60,12 @@ async function run(): Promise<void> {
             return "golangci-lint"
           } else {
             core.info(`couldn't find golangci-lint in the path; installing it`);
-            return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+            //return await installer.installGolangciLint(golangciLintVersion, tmpdir);
+            return "golangci-lint"
           }
         }
+
+        return "golangci-lint"
       },
     );
 
